@@ -9,30 +9,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        script: |
-          cd /var/www/expense-management
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/expense-management
 
-          composer install --no-dev --optimize-autoloader --no-interaction
+            git fetch origin
+            git reset --hard origin/main
 
-          # Run migrations
-          php artisan migrate --force
+            # install dependencies
+            composer install --no-dev --optimize-autoloader --no-interaction
 
-          # Clear cache
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
+            # Run migrations
+            php artisan migrate --force
 
-          # Restart queue workers
-          sudo systemctl restart expense-queue.service
+            # Clear cache
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
 
-          # Reload PHP-FPM
-          sudo systemctl reload php8.3-fpm
+            # Restart queue workers
+            sudo systemctl restart expense-queue.service
+
+            # Reload PHP-FPM
+            sudo systemctl reload php8.3-fpm

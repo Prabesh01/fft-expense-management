@@ -1,0 +1,29 @@
+; /etc/systemd/system/expense-queue.service
+
+[Unit]
+Description=Expense Management Queue Worker
+After=network.target
+Requires=mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/expense-management
+ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+Restart=always
+RestartSec=3
+StartLimitInterval=0
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=expense-queue
+
+[Install]
+WantedBy=multi-user.target
+
+; systemctl daemon-reload
+; systemctl enable expense-queue.service
+; systemctl start expense-queue.service
+

@@ -1,3 +1,5 @@
+Project is live at  [fft.cote.ws](https://fft.cote.ws)!
+
 # Run (Dev):
 
 - `php artisan migrate`

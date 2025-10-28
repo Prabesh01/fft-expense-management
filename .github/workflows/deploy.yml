@@ -1,0 +1,38 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /var/www/expense-management
+
+          composer install --no-dev --optimize-autoloader --no-interaction
+
+          # Run migrations
+          php artisan migrate --force
+
+          # Clear cache
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+          # Restart queue workers
+          sudo systemctl restart expense-queue.service
+
+          # Reload PHP-FPM
+          sudo systemctl reload php8.3-fpm
